@@ -130,7 +130,7 @@ GitHub Actions will automatically:
 3. Upload binaries as release assets
 4. Generate release notes from commits
 
-**Check progress**: https://github.com/YOUR_USERNAME/srt-rust/actions
+**Check progress**: https://github.com/dallasgutauckis/srt-rust/actions
 
 ## Release Assets
 
@@ -284,13 +284,13 @@ Required secrets for full automation:
 | `CARGO_REGISTRY_TOKEN` | Publish to crates.io | ❌ Optional |
 | `CODECOV_TOKEN` | Code coverage | ❌ Optional |
 
-Set secrets at: `https://github.com/YOUR_USERNAME/srt-rust/settings/secrets/actions`
+Set secrets at: `https://github.com/dallasgutauckis/srt-rust/settings/secrets/actions`
 
 ## Monitoring Releases
 
-**View releases**: https://github.com/YOUR_USERNAME/srt-rust/releases
+**View releases**: https://github.com/dallasgutauckis/srt-rust/releases
 
-**View actions**: https://github.com/YOUR_USERNAME/srt-rust/actions
+**View actions**: https://github.com/dallasgutauckis/srt-rust/actions
 
 **View builds**: Click on any workflow run to see logs
 

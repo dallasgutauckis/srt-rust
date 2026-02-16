@@ -34,7 +34,7 @@ This implementation focuses on:
 
 ### Pre-built Binaries
 
-Download pre-built binaries for your platform from the [Releases](https://github.com/YOUR_USERNAME/srt-rust/releases) page:
+Download pre-built binaries for your platform from the [Releases](https://github.com/dallasgutauckis/srt-rust/releases) page:
 
 - **Linux x86_64**: For Docker containers and standard Linux servers
 - **Linux ARM64**: For ARM-based servers (AWS Graviton, Raspberry Pi, etc.)
