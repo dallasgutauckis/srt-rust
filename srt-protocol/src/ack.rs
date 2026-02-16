@@ -233,7 +233,8 @@ impl NakGenerator {
     /// Create a new NAK generator
     pub fn new(min_nak_interval: Duration) -> Self {
         NakGenerator {
-            last_nak_time: Instant::now(),
+            // Initialize to past time so first NAK can be sent immediately
+            last_nak_time: Instant::now() - min_nak_interval,
             min_nak_interval,
         }
     }

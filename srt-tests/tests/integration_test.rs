@@ -59,8 +59,8 @@ fn test_buffer_roundtrip() {
 
     let mut seqs = Vec::new();
     for (i, msg) in messages.iter().enumerate() {
-        let packet = DataPacket::new(
-            SeqNumber::new(0),
+        let mut packet = DataPacket::new(
+            SeqNumber::new(i as u32),
             MsgNumber {
                 boundary: srt_protocol::packet::PacketBoundary::Solo,
                 in_order: false,
@@ -76,7 +76,8 @@ fn test_buffer_roundtrip() {
         let seq = send_buffer.push(packet.clone()).unwrap();
         seqs.push(seq);
 
-        // Simulate receiving
+        // Update packet with assigned sequence number for receiving
+        packet.header.seq_or_control = seq.as_raw();
         recv_buffer.push(packet).unwrap();
     }
 

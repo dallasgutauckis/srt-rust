@@ -55,6 +55,8 @@ pub struct SendBuffer {
     next_seq: SeqNumber,
     /// Oldest unacknowledged sequence number
     oldest_unacked: SeqNumber,
+    /// Oldest packet in buffer (acknowledged or not)
+    oldest_in_buffer: SeqNumber,
     /// Time-to-live for packets (packets older than this are dropped)
     ttl: Duration,
 }
@@ -76,6 +78,7 @@ impl SendBuffer {
             mask,
             next_seq: SeqNumber::new(0),
             oldest_unacked: SeqNumber::new(0),
+            oldest_in_buffer: SeqNumber::new(0),
             ttl,
         }
     }
@@ -183,7 +186,7 @@ impl SendBuffer {
     /// Remove acknowledged packets from the buffer
     pub fn flush_acknowledged(&mut self) -> usize {
         let mut count = 0;
-        let mut current = self.oldest_unacked;
+        let mut current = self.oldest_in_buffer;
 
         while current.lt(self.next_seq) {
             let idx = self.index(current);
@@ -192,14 +195,18 @@ impl SendBuffer {
                 if stored.acknowledged {
                     self.buffer[idx] = None;
                     count += 1;
+                    current = current.next();
                 } else {
                     break;
                 }
+            } else {
+                // Slot is empty, skip to next
+                current = current.next();
             }
-
-            current = current.next();
         }
 
+        // Update oldest_in_buffer to the first non-flushed packet
+        self.oldest_in_buffer = current;
         self.oldest_unacked = current;
         count
     }
