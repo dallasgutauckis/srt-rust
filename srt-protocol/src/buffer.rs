@@ -417,12 +417,12 @@ impl ReceiveBuffer {
                     self.next_expected = current_seq.next();
                     return Some(message.freeze());
                 }
-                crate::packet::PacketBoundary::Subsequent => {
-                    // Middle packet, continue
+                crate::packet::PacketBoundary::First | crate::packet::PacketBoundary::Subsequent => {
+                    // First or middle packet, continue
                     current_seq = current_seq.next();
                 }
                 _ => {
-                    // Invalid boundary in middle of message
+                    // Invalid boundary (Solo shouldn't appear in multi-packet message)
                     return None;
                 }
             }
