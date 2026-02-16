@@ -1,6 +1,6 @@
 use bytes::Bytes;
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use srt_protocol::packet::{ControlPacket, ControlType, DataPacket, MsgNumber, Packet};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use srt_protocol::packet::{ControlPacket, ControlType, DataPacket, MsgNumber};
 use srt_protocol::sequence::SeqNumber;
 
 fn bench_data_packet_serialize(c: &mut Criterion) {
@@ -58,19 +58,19 @@ fn bench_seq_number_ops(c: &mut Criterion) {
     });
 
     group.bench_function("distance", |b| {
-        let a = SeqNumber::new(1000);
-        let b = SeqNumber::new(2000);
+        let seq_a = SeqNumber::new(1000);
+        let seq_b = SeqNumber::new(2000);
         b.iter(|| {
-            let dist = black_box(a).distance_to(black_box(b));
+            let dist = black_box(seq_a).distance_to(black_box(seq_b));
             black_box(dist);
         });
     });
 
     group.bench_function("comparison", |b| {
-        let a = SeqNumber::new(1000);
-        let b = SeqNumber::new(2000);
+        let seq_a = SeqNumber::new(1000);
+        let seq_b = SeqNumber::new(2000);
         b.iter(|| {
-            let result = black_box(a).lt(black_box(b));
+            let result = black_box(seq_a).lt(black_box(seq_b));
             black_box(result);
         });
     });

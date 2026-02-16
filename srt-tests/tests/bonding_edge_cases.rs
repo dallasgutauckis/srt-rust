@@ -123,7 +123,7 @@ fn test_wraparound_with_large_gap() {
 
     // Should detect gap (missing 3-12)
     let missing = alignment.get_missing_sequences();
-    assert!(missing.len() > 0, "Should detect missing packets with large gap");
+    assert!(!missing.is_empty(), "Should detect missing packets with large gap");
 }
 
 // ============================================================================

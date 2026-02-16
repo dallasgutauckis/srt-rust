@@ -298,7 +298,7 @@ impl SrtHandshakeExtension {
             return Err(HandshakeError::ExtensionError);
         }
 
-        let mut buf = &bytes[..];
+        let mut buf = bytes;
 
         let ext_type = buf.get_u16();
         let ext_size = buf.get_u16();

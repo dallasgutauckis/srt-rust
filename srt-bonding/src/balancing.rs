@@ -358,6 +358,7 @@ mod tests {
         Arc::new(SocketGroup::new(1, GroupType::Balancing, 10))
     }
 
+    #[allow(dead_code)]
     fn create_test_connection(id: u32) -> Arc<Connection> {
         Arc::new(Connection::new(
             id,

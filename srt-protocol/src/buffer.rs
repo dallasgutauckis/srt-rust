@@ -3,7 +3,7 @@
 //! SRT uses circular buffers indexed by sequence numbers for efficient
 //! packet storage and retrieval.
 
-use crate::packet::{DataPacket, MsgNumber, PacketBoundary};
+use crate::packet::DataPacket;
 use crate::sequence::SeqNumber;
 use bytes::Bytes;
 use std::collections::VecDeque;
@@ -478,7 +478,7 @@ impl ReceiveBuffer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::packet::PacketBoundary;
+    use crate::packet::{MsgNumber, PacketBoundary};
 
     fn create_test_packet(seq: u32, msg_seq: u32, payload: &[u8]) -> DataPacket {
         DataPacket::new(

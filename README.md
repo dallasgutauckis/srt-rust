@@ -2,24 +2,6 @@
 
 A complete rewrite of the SRT (Secure Reliable Transport) protocol library from C/C++ to Rust, with emphasis on **bonded multi-path streaming** for heterogeneous networks.
 
-## Project Status
-
-✅ **MVP Complete** - Core functionality implemented and tested
-
-### Current Progress
-- [x] Cargo workspace structure
-- [x] Packet structures and serialization
-- [x] Sequence number handling with wraparound
-- [x] Send/Receive buffers with out-of-order handling
-- [x] Connection handshake and state machine
-- [x] ACK/NAK generation
-- [x] Multi-path bonding (broadcast, backup, load balancing)
-- [x] CLI tools (srt-sender, srt-receiver)
-- [x] CI/CD pipeline with GitHub Actions
-- [x] Comprehensive test suite (177/177 passing)
-- [x] Release builds for multiple platforms
-- [x] Docker container support
-
 ## Architecture
 
 This project is organized as a Cargo workspace with the following crates:
@@ -61,8 +43,8 @@ Download pre-built binaries for your platform from the [Releases](https://github
 
 ```bash
 # Download and extract (example for Linux x86_64)
-wget https://github.com/YOUR_USERNAME/srt-rust/releases/download/v0.1.0/srt-linux-x86_64-0.1.0.tar.gz
-tar -xzf srt-linux-x86_64-0.1.0.tar.gz
+wget https://github.com/dallasgutauckis/srt-rust/releases/download/v0.1.0/srt-linux-x86_64-<version>.tar.gz
+tar -xzf srt-linux-x86_64-<version>.tar.gz
 
 # Make binaries executable and move to PATH
 chmod +x srt-sender srt-receiver
@@ -78,7 +60,7 @@ Pull the official Docker image:
 docker pull ghcr.io/YOUR_USERNAME/srt-rust:latest
 
 # Or specific version
-docker pull ghcr.io/YOUR_USERNAME/srt-rust:0.1.0
+docker pull ghcr.io/YOUR_USERNAME/srt-rust:<version>
 
 # Run sender (reading from stdin)
 docker run -i --rm -p 9000:9000/udp ghcr.io/YOUR_USERNAME/srt-rust:latest \
@@ -165,21 +147,6 @@ cargo bench --package srt-protocol
 # Generate documentation
 cargo doc --workspace --no-deps --open
 ```
-
-## Timeline
-
-- **Phase 1** (Months 1-2): Foundation - Packet structures, sequence numbers
-- **Phase 2** (Months 2-4): Core Protocol - Single connection send/receive
-- **Phase 3** (Months 4-7): Connection Bonding - Multi-path streaming (CRITICAL)
-- **Phase 4** (Months 7-8): Forward Error Correction
-- **Phase 5** (Months 8-9): CLI Applications
-- **Phase 6** (Months 9-10): Performance & Optimization
-- **Phase 7** (Months 10-11): Encryption
-- **Phase 8** (Months 11-12): Testing & Stabilization
-
-## License
-
-MIT OR Apache-2.0
 
 ## References
 

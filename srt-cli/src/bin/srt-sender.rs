@@ -53,8 +53,7 @@ enum InputSource {
 fn parse_input(input: &str) -> anyhow::Result<InputSource> {
     if input == "-" {
         Ok(InputSource::Stdin)
-    } else if input.starts_with("udp://") {
-        let addr_str = &input[6..];
+    } else if let Some(addr_str) = input.strip_prefix("udp://") {
         let addr_str = if addr_str.starts_with(':') {
             format!("0.0.0.0{}", addr_str)
         } else {
@@ -185,30 +184,27 @@ fn main() -> anyhow::Result<()> {
         let mut handshake_done = false;
         let start = Instant::now();
         while start.elapsed() < Duration::from_secs(5) {
-            match socket.recv_from(&mut hs_buf) {
-                Ok((n, addr)) => {
-                    tracing::info!("Received {} bytes in handshake loop from {}", n, addr);
-                    if n >= 16 && (hs_buf[0] & 0x80) != 0 {
-                        if let Ok(resp_hs) = SrtHandshake::from_bytes(&hs_buf[16..n]) {
-                            match conn.process_handshake(resp_hs.clone()) {
-                                Ok(()) => {
-                                    tracing::info!("Handshake successful with {}, remote_socket_id={:?}",
-                                        remote_addr, conn.remote_socket_id());
-                                    handshake_done = true;
-                                    break;
-                                }
-                                Err(e) => {
-                                    tracing::error!("Handshake processing failed: {}", e);
-                                }
+            if let Ok((n, addr)) = socket.recv_from(&mut hs_buf) {
+                tracing::info!("Received {} bytes in handshake loop from {}", n, addr);
+                if n >= 16 && (hs_buf[0] & 0x80) != 0 {
+                    if let Ok(resp_hs) = SrtHandshake::from_bytes(&hs_buf[16..n]) {
+                        match conn.process_handshake(resp_hs.clone()) {
+                            Ok(()) => {
+                                tracing::info!("Handshake successful with {}, remote_socket_id={:?}",
+                                    remote_addr, conn.remote_socket_id());
+                                handshake_done = true;
+                                break;
                             }
-                        } else {
-                            tracing::debug!("Failed to parse SRT handshake from {}", addr);
+                            Err(e) => {
+                                tracing::error!("Handshake processing failed: {}", e);
+                            }
                         }
                     } else {
-                        tracing::debug!("Received non-control packet during handshake from {}", addr);
+                        tracing::debug!("Failed to parse SRT handshake from {}", addr);
                     }
+                } else {
+                    tracing::debug!("Received non-control packet during handshake from {}", addr);
                 }
-                Err(_) => {}
             }
             thread::sleep(Duration::from_millis(50));
         }

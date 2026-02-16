@@ -140,7 +140,7 @@ impl Add<u32> for SeqNumber {
 
 impl AddAssign<u32> for SeqNumber {
     fn add_assign(&mut self, rhs: u32) {
-        self.0 = (self.0.wrapping_add(rhs)) & MAX_SEQ_NUMBER;
+        *self = SeqNumber::new_unchecked(self.0.wrapping_add(rhs));
     }
 }
 
@@ -154,7 +154,7 @@ impl Sub<u32> for SeqNumber {
 
 impl SubAssign<u32> for SeqNumber {
     fn sub_assign(&mut self, rhs: u32) {
-        self.0 = (self.0.wrapping_sub(rhs)) & MAX_SEQ_NUMBER;
+        *self = SeqNumber::new_unchecked(self.0.wrapping_sub(rhs));
     }
 }
 

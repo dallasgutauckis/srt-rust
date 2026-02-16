@@ -66,14 +66,15 @@ fn control_type_strategy() -> impl Strategy<Value = ControlType> {
     ]
 }
 
+#[allow(dead_code)]
 fn payload_strategy() -> impl Strategy<Value = Bytes> {
     prop::collection::vec(any::<u8>(), 0..=MAX_PAYLOAD_SIZE)
-        .prop_map(|v| Bytes::from(v))
+        .prop_map(Bytes::from)
 }
 
 fn small_payload_strategy() -> impl Strategy<Value = Bytes> {
     prop::collection::vec(any::<u8>(), 0..=256)
-        .prop_map(|v| Bytes::from(v))
+        .prop_map(Bytes::from)
 }
 
 // Property tests

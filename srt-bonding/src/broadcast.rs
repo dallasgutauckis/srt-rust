@@ -129,13 +129,9 @@ impl BroadcastReceiver {
         let mut next_expected = self.next_expected.write();
         let mut ready_queue = self.ready_queue.write();
 
-        loop {
-            if let Some(info) = received.remove(&*next_expected) {
-                ready_queue.push_back(info.packet);
-                *next_expected = next_expected.next();
-            } else {
-                break;
-            }
+        while let Some(info) = received.remove(&*next_expected) {
+            ready_queue.push_back(info.packet);
+            *next_expected = next_expected.next();
         }
     }
 

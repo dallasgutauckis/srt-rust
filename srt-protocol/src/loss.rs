@@ -36,6 +36,11 @@ impl LossRange {
         (self.end.as_raw().wrapping_sub(self.start.as_raw()) + 1) as usize
     }
 
+    /// Check if range is empty (always false for valid ranges)
+    pub fn is_empty(&self) -> bool {
+        false
+    }
+
     /// Check if this is a single packet
     pub fn is_single(&self) -> bool {
         self.start == self.end

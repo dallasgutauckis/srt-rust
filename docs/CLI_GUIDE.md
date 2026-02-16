@@ -8,12 +8,12 @@ The SRT CLI tools provide production-ready multi-path streaming capabilities:
 
 ## Features
 
-✅ **Multi-Path Bonding**
+**Multi-Path Bonding**
 - Broadcast mode: Send to all paths, receive from fastest
 - Backup mode: Primary/backup with automatic failover
 - Load balancing: Distribute packets across paths
 
-✅ **Production Ready**
+**Production Ready**
 - Real UDP sockets with proper error handling
 - Duplicate packet detection and elimination
 - Packet alignment across varying latency paths
@@ -343,11 +343,11 @@ netstat -an | grep 9000
 
 ## Next Steps
 
-- ✅ CLI tools are working!
-- ⚡ Try local test first
-- ⚡ Test over real networks with multiple paths
-- ⚡ Monitor statistics to verify bonding is working
-- 🚀 Deploy in production!
+- CLI tools are working!
+- Try local test first
+- Test over real networks with multiple paths
+- Monitor statistics to verify bonding is working
+- Deploy in production!
 
 ---
 
@@ -363,7 +363,7 @@ These are all planned features that can be added incrementally!
 
 ## Success Criteria
 
-✅ You have working multi-path bonding if:
+You have working multi-path bonding if:
 - Sender reports "Transmission complete" with packet count
 - Receiver reports packets received with Mbps stats
 - Output file matches input file size (for file transfers)

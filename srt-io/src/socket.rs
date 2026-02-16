@@ -90,7 +90,7 @@ impl SrtSocket {
 
     /// Get the local address this socket is bound to
     pub fn local_addr(&self) -> Result<SocketAddr, SocketError> {
-        Ok(self.inner.local_addr()?.as_socket().ok_or(SocketError::InvalidAddress)?)
+        self.inner.local_addr()?.as_socket().ok_or(SocketError::InvalidAddress)
     }
 
     /// Send data to the given address

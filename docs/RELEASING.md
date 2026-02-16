@@ -1,6 +1,6 @@
 # Release Process
 
-This document describes the CI/CD setup and release process for SRT Rust.
+This document describes the CI/CD setup and release process
 
 ## Overview
 
@@ -125,10 +125,10 @@ git push origin vX.Y.Z
 
 GitHub Actions will automatically:
 
-1. ✅ Create a GitHub release
-2. ✅ Build binaries for all platforms (5-10 minutes)
-3. ✅ Upload binaries as release assets
-4. ✅ Generate release notes from commits
+1. Create a GitHub release
+2. Build binaries for all platforms (5-10 minutes)
+3. Upload binaries as release assets
+4. Generate release notes from commits
 
 **Check progress**: https://github.com/YOUR_USERNAME/srt-rust/actions
 
@@ -280,7 +280,7 @@ Required secrets for full automation:
 
 | Secret | Purpose | Required |
 |--------|---------|----------|
-| `GITHUB_TOKEN` | Auto-created | ✅ Yes |
+| `GITHUB_TOKEN` | Auto-created | Yes |
 | `CARGO_REGISTRY_TOKEN` | Publish to crates.io | ❌ Optional |
 | `CODECOV_TOKEN` | Code coverage | ❌ Optional |
 

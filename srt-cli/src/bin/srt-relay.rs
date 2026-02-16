@@ -317,10 +317,8 @@ fn relay_srt_input(port: u16, num_paths: usize, writer: &mut MultiWriter, stats_
 
             if let Err(e) = group.add_member(conn, remote_addr) {
                 tracing::warn!("Failed to add member: {}", e);
-            } else {
-                if let Err(e) = group.update_member_status(id, MemberStatus::Active) {
-                    tracing::warn!("Failed to set member active: {}", e);
-                }
+            } else if let Err(e) = group.update_member_status(id, MemberStatus::Active) {
+                tracing::warn!("Failed to set member active: {}", e);
             }
 
             id
