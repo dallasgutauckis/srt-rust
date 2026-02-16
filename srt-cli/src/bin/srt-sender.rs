@@ -138,7 +138,15 @@ impl Read for UdpReader {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    tracing_subscriber::fmt::init();
+
+    // Initialize tracing based on verbose flag
+    tracing_subscriber::fmt()
+        .with_max_level(if args.verbose {
+            tracing::Level::DEBUG
+        } else {
+            tracing::Level::INFO
+        })
+        .init();
 
     tracing::info!("SRT Sender starting...");
 
