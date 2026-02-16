@@ -1,0 +1,15 @@
+[package]
+name = "srt-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+srt = { path = "../srt" }
+srt-protocol = { path = "../srt-protocol" }
+srt-bonding = { path = "../srt-bonding" }
+proptest = { workspace = true }
+bytes = { workspace = true }

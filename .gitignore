@@ -1,0 +1,54 @@
+# Rust build artifacts
+/target/
+**/target/
+
+# Cargo lock file (commit this for applications, ignore for libraries)
+# Since this workspace includes srt-cli binary, Cargo.lock is tracked
+# Cargo.lock
+
+# Backup files
+**/*.rs.bk
+*.bk
+
+# Generated documentation
+/doc/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Debug symbols
+*.pdb
+
+# Test artifacts
+*.profraw
+*.profdata
+
+# Benchmark results
+/benches/*/target/
+
+# Coverage reports
+coverage/
+*.lcov
+tarpaulin-report.html
+
+# Environment files (may contain secrets)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

@@ -1,0 +1,34 @@
+[package]
+name = "srt-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+srt = { path = "../srt" }
+srt-bonding = { path = "../srt-bonding" }
+srt-protocol = { path = "../srt-protocol" }
+srt-io = { path = "../srt-io" }
+bytes = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
+thiserror = { workspace = true }
+
+[[bin]]
+name = "srt-sender"
+path = "src/bin/srt-sender.rs"
+
+[[bin]]
+name = "srt-receiver"
+path = "src/bin/srt-receiver.rs"
+
+[[bin]]
+name = "srt-relay"
+path = "src/bin/srt-relay.rs"

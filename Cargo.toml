@@ -1,0 +1,58 @@
+[workspace]
+resolver = "2"
+members = [
+    "srt-protocol",
+    "srt-bonding",
+    "srt-crypto",
+    "srt-io",
+    "srt",
+    "srt-cli",
+    "srt-tests",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/yourusername/srt-rust"
+authors = ["SRT Rust Contributors"]
+
+[workspace.dependencies]
+# Core dependencies
+bytes = "1.5"
+socket2 = { version = "0.5", features = ["all"] }
+parking_lot = "0.12"
+crossbeam = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Crypto
+ring = "0.17"
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Testing
+proptest = "1.4"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Serialization (for config files)
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = false
+debug = false
+panic = "abort"
+
+[profile.bench]
+inherits = "release"
+debug = true
