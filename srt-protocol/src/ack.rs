@@ -190,11 +190,7 @@ impl AckGenerator {
     }
 
     /// Generate an ACK packet
-    pub fn generate_ack(
-        &mut self,
-        ack_info: AckInfo,
-        dest_socket_id: u32,
-    ) -> ControlPacket {
+    pub fn generate_ack(&mut self, ack_info: AckInfo, dest_socket_id: u32) -> ControlPacket {
         self.last_ack_seq = ack_info.ack_seq;
         self.last_ack_time = Instant::now();
 
@@ -302,7 +298,7 @@ impl RttEstimator {
         } else {
             // Exponential moving average
             let alpha = 0.125; // Smoothing factor for SRTT
-            let beta = 0.25;   // Smoothing factor for variance
+            let beta = 0.25; // Smoothing factor for variance
 
             let error = sample - self.srtt;
             self.srtt += alpha * error;
@@ -369,9 +365,10 @@ mod tests {
 
     #[test]
     fn test_nak_info_range() {
-        let nak = NakInfo::new(vec![
-            LossRange::new(SeqNumber::new(100), SeqNumber::new(105)),
-        ]);
+        let nak = NakInfo::new(vec![LossRange::new(
+            SeqNumber::new(100),
+            SeqNumber::new(105),
+        )]);
 
         let bytes = nak.to_bytes();
         let decoded = NakInfo::from_bytes(&bytes).unwrap();
@@ -416,7 +413,7 @@ mod tests {
         // Add some samples
         estimator.update(100_000); // 100ms
         estimator.update(120_000); // 120ms
-        estimator.update(90_000);  // 90ms
+        estimator.update(90_000); // 90ms
 
         let srtt = estimator.srtt();
         assert!(srtt > 90_000 && srtt < 120_000);

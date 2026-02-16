@@ -230,7 +230,9 @@ impl SendBuffer {
 
     /// Get the number of packets currently in the buffer
     pub fn len(&self) -> usize {
-        self.next_seq.as_raw().wrapping_sub(self.oldest_unacked.as_raw()) as usize
+        self.next_seq
+            .as_raw()
+            .wrapping_sub(self.oldest_unacked.as_raw()) as usize
     }
 
     /// Check if the buffer is empty
@@ -417,7 +419,8 @@ impl ReceiveBuffer {
                     self.next_expected = current_seq.next();
                     return Some(message.freeze());
                 }
-                crate::packet::PacketBoundary::First | crate::packet::PacketBoundary::Subsequent => {
+                crate::packet::PacketBoundary::First
+                | crate::packet::PacketBoundary::Subsequent => {
                     // First or middle packet, continue
                     current_seq = current_seq.next();
                 }
@@ -466,11 +469,7 @@ impl ReceiveBuffer {
 
     /// Get buffer utilization (0.0 to 1.0)
     pub fn utilization(&self) -> f32 {
-        let filled = self
-            .buffer
-            .iter()
-            .filter(|slot| slot.is_some())
-            .count();
+        let filled = self.buffer.iter().filter(|slot| slot.is_some()).count();
         filled as f32 / self.capacity as f32
     }
 }

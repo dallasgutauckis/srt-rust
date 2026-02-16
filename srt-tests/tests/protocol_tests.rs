@@ -71,14 +71,7 @@ fn test_packet_auto_detection() {
     }
 
     // Create a control packet
-    let control_packet = ControlPacket::new(
-        ControlType::KeepAlive,
-        0,
-        0,
-        2000,
-        9999,
-        Bytes::new(),
-    );
+    let control_packet = ControlPacket::new(ControlType::KeepAlive, 0, 0, 2000, 9999, Bytes::new());
     let control_bytes = control_packet.to_bytes();
 
     // Parse using the unified Packet enum
@@ -197,8 +190,7 @@ fn test_all_control_types() {
     ];
 
     for control_type in control_types {
-        let packet =
-            ControlPacket::new(control_type, 0, 0, 1000, 9999, Bytes::new());
+        let packet = ControlPacket::new(control_type, 0, 0, 1000, 9999, Bytes::new());
 
         let serialized = packet.to_bytes();
         let deserialized = ControlPacket::from_bytes(&serialized).unwrap();
@@ -292,7 +284,7 @@ fn test_message_number_fields_combined() {
 fn test_control_type_specific_info() {
     let packet = ControlPacket::new(
         ControlType::Ack,
-        0xFFFF, // Max type-specific info
+        0xFFFF,      // Max type-specific info
         0xDEAD_BEEF, // Additional info
         12345,
         9999,

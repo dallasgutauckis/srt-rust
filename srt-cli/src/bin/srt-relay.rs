@@ -9,15 +9,15 @@
 
 use clap::Parser;
 use srt_bonding::*;
-use srt_protocol::{Connection, SeqNumber, DataPacket};
 use srt_io::SrtSocket;
+use srt_protocol::{Connection, DataPacket, SeqNumber};
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{self, Write, BufWriter};
+use std::io::{self, BufWriter, Write};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 use std::thread;
+use std::time::{Duration, Instant};
 
 #[derive(Parser, Debug)]
 #[command(name = "srt-relay")]
@@ -59,17 +59,17 @@ struct Args {
 
 /// Input source type
 enum InputSource {
-    Srt(u16),      // SRT listen port
-    Udp(u16),      // UDP listen port
-    File(String),  // File path
-    Stdin,         // Stdin
+    Srt(u16),     // SRT listen port
+    Udp(u16),     // UDP listen port
+    File(String), // File path
+    Stdin,        // Stdin
 }
 
 /// Output destination type
 enum OutputDest {
-    Udp(SocketAddr),  // UDP destination
-    File(String),     // File path
-    Stdout,           // Stdout
+    Udp(SocketAddr), // UDP destination
+    File(String),    // File path
+    Stdout,          // Stdout
 }
 
 /// Parse input string
@@ -105,7 +105,8 @@ fn parse_output(output: &str) -> anyhow::Result<OutputDest> {
         Ok(OutputDest::Stdout)
     } else if output.starts_with("udp://") {
         let addr_str = output.strip_prefix("udp://").unwrap();
-        let addr: SocketAddr = addr_str.parse()
+        let addr: SocketAddr = addr_str
+            .parse()
             .map_err(|e| anyhow::anyhow!("Invalid UDP address '{}': {}", addr_str, e))?;
         Ok(OutputDest::Udp(addr))
     } else if output.starts_with("file:") {
@@ -191,9 +192,7 @@ fn main() -> anyhow::Result<()> {
 
     // Initialize logging
     let log_level = if args.verbose { "debug" } else { "info" };
-    tracing_subscriber::fmt()
-        .with_env_filter(log_level)
-        .init();
+    tracing_subscriber::fmt().with_env_filter(log_level).init();
 
     tracing::info!("SRT Relay starting...");
     tracing::info!("Input: {}", args.input);
@@ -207,7 +206,9 @@ fn main() -> anyhow::Result<()> {
     let input_source = parse_input(&args.input)?;
 
     // Parse outputs
-    let output_dests: Vec<OutputDest> = args.output.iter()
+    let output_dests: Vec<OutputDest> = args
+        .output
+        .iter()
         .map(|s| parse_output(s))
         .collect::<Result<_, _>>()?;
 
@@ -238,7 +239,12 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Relay SRT input to outputs
-fn relay_srt_input(port: u16, num_paths: usize, writer: &mut MultiWriter, stats_interval: u64) -> anyhow::Result<()> {
+fn relay_srt_input(
+    port: u16,
+    num_paths: usize,
+    writer: &mut MultiWriter,
+    stats_interval: u64,
+) -> anyhow::Result<()> {
     // Create SRT receiver
     let listen_addr: SocketAddr = format!("0.0.0.0:{}", port).parse()?;
     let socket = SrtSocket::bind(listen_addr)?;
@@ -255,17 +261,15 @@ fn relay_srt_input(port: u16, num_paths: usize, writer: &mut MultiWriter, stats_
     // Statistics thread
     let bonding_stats = bonding.clone();
     if stats_interval > 0 {
-        thread::spawn(move || {
-            loop {
-                thread::sleep(Duration::from_secs(stats_interval));
-                let stats = bonding_stats.stats();
-                tracing::info!(
-                    "Stats: {} members, buffered={}, ready={}",
-                    stats.group_stats.member_count,
-                    stats.receiver_stats.buffered_packets,
-                    stats.receiver_stats.ready_packets
-                );
-            }
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_secs(stats_interval));
+            let stats = bonding_stats.stats();
+            tracing::info!(
+                "Stats: {} members, buffered={}, ready={}",
+                stats.group_stats.member_count,
+                stats.receiver_stats.buffered_packets,
+                stats.receiver_stats.ready_packets
+            );
         });
     }
 
@@ -393,7 +397,8 @@ fn relay_udp_input(port: u16, writer: &mut MultiWriter, stats_interval: u64) -> 
                 }
 
                 // Print stats
-                if stats_interval > 0 && last_stats.elapsed() >= Duration::from_secs(stats_interval) {
+                if stats_interval > 0 && last_stats.elapsed() >= Duration::from_secs(stats_interval)
+                {
                     let elapsed = start_time.elapsed().as_secs_f64();
                     let mbps = (total_bytes as f64 * 8.0) / (elapsed * 1_000_000.0);
                     tracing::info!(

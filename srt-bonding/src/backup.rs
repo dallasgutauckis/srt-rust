@@ -145,9 +145,7 @@ impl BackupBonding {
 
     /// Send data on primary link
     pub fn send(&self, data: &[u8]) -> Result<SeqNumber, BackupError> {
-        let primary_id = self
-            .get_primary_id()
-            .ok_or(BackupError::NoPrimary)?;
+        let primary_id = self.get_primary_id().ok_or(BackupError::NoPrimary)?;
 
         let member = self
             .group

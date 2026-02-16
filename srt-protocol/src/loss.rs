@@ -23,7 +23,10 @@ impl LossRange {
 
     /// Create a single-packet loss range
     pub fn single(seq: SeqNumber) -> Self {
-        LossRange { start: seq, end: seq }
+        LossRange {
+            start: seq,
+            end: seq,
+        }
     }
 
     /// Check if this range contains a sequence number

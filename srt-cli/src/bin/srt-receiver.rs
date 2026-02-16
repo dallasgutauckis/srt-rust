@@ -4,15 +4,15 @@
 
 use clap::Parser;
 use srt_bonding::*;
-use srt_protocol::{Connection, SeqNumber, DataPacket, SrtHandshake};
 use srt_io::SrtSocket;
+use srt_protocol::{Connection, DataPacket, SeqNumber, SrtHandshake};
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{self, Write, BufWriter};
+use std::io::{self, BufWriter, Write};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
 use std::thread;
+use std::time::{Duration, Instant};
 
 #[derive(Parser, Debug)]
 #[command(name = "srt-receiver")]
@@ -85,9 +85,10 @@ fn main() -> anyhow::Result<()> {
         Box::new(io::stdout())
     } else if args.output.starts_with("udp://") {
         let addr_str = &args.output[6..];
-        let target_addr: SocketAddr = addr_str.parse()
+        let target_addr: SocketAddr = addr_str
+            .parse()
             .map_err(|e| anyhow::anyhow!("Invalid UDP output address '{}': {}", addr_str, e))?;
-        
+
         tracing::info!("Relaying to UDP: {}", target_addr);
         let socket = std::net::UdpSocket::bind("0.0.0.0:0")?;
         socket.connect(target_addr)?;
@@ -103,17 +104,15 @@ fn main() -> anyhow::Result<()> {
     let bonding_stats = bonding.clone();
     let stats_interval = args.stats;
     if stats_interval > 0 {
-        thread::spawn(move || {
-            loop {
-                thread::sleep(Duration::from_secs(stats_interval));
-                let stats = bonding_stats.stats();
-                tracing::info!(
-                    "Stats: {} members, buffered={}, ready={}",
-                    stats.group_stats.member_count,
-                    stats.receiver_stats.buffered_packets,
-                    stats.receiver_stats.ready_packets
-                );
-            }
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_secs(stats_interval));
+            let stats = bonding_stats.stats();
+            tracing::info!(
+                "Stats: {} members, buffered={}, ready={}",
+                stats.group_stats.member_count,
+                stats.receiver_stats.buffered_packets,
+                stats.receiver_stats.ready_packets
+            );
         });
     }
 
@@ -154,14 +153,21 @@ fn main() -> anyhow::Result<()> {
             tracing::info!("Received control packet ({} bytes) from {}", n, remote_addr);
             // Control packet - skip 16-byte header for handshake body
             if let Ok(hs) = SrtHandshake::from_bytes(&buffer[16..n]) {
-                tracing::info!("Received handshake request from {}, sender_socket_id={}",
-                    remote_addr, hs.udt.socket_id);
+                tracing::info!(
+                    "Received handshake request from {}, sender_socket_id={}",
+                    remote_addr,
+                    hs.udt.socket_id
+                );
 
                 // Get or create member ID for this remote address
                 let member_id = *addr_to_member.entry(remote_addr).or_insert_with(|| {
                     let id = next_member_id;
                     next_member_id += 1;
-                    tracing::info!("New path detected (handshake): {} (member {})", remote_addr, id);
+                    tracing::info!(
+                        "New path detected (handshake): {} (member {})",
+                        remote_addr,
+                        id
+                    );
                     id
                 });
 
@@ -170,21 +176,30 @@ fn main() -> anyhow::Result<()> {
 
                 let mut resp_hs = hs.clone();
                 resp_hs.udt.handshake_type = -2; // Agreement
-                resp_hs.udt.socket_id = 999; 
-                
+                resp_hs.udt.socket_id = 999;
+
                 let hs_body = resp_hs.to_bytes();
                 let resp_packet = srt_protocol::ControlPacket::new(
                     srt_protocol::packet::ControlType::Handshake,
-                    0, 0, 0, 0,
+                    0,
+                    0,
+                    0,
+                    0,
                     bytes::Bytes::copy_from_slice(&hs_body),
                 );
-                
+
                 let resp_bytes = resp_packet.to_bytes();
                 match socket.send_to(&resp_bytes, remote_addr) {
-                    Ok(n) => tracing::info!("Sent {} bytes of handshake agreement to {}", n, remote_addr),
-                    Err(e) => tracing::error!("Failed to send handshake agreement to {}: {}", remote_addr, e),
+                    Ok(n) => {
+                        tracing::info!("Sent {} bytes of handshake agreement to {}", n, remote_addr)
+                    }
+                    Err(e) => tracing::error!(
+                        "Failed to send handshake agreement to {}: {}",
+                        remote_addr,
+                        e
+                    ),
                 }
-                
+
                 // Ensure member is in group and active
                 if group.get_member(member_id).is_none() {
                     let mut conn = Connection::new(
@@ -196,8 +211,11 @@ fn main() -> anyhow::Result<()> {
                     );
                     // Set remote socket ID to sender's socket ID
                     let _ = conn.process_handshake(hs.clone());
-                    tracing::info!("Created connection for member {}, remote_socket_id={:?}",
-                        member_id, conn.remote_socket_id());
+                    tracing::info!(
+                        "Created connection for member {}, remote_socket_id={:?}",
+                        member_id,
+                        conn.remote_socket_id()
+                    );
 
                     let conn_arc = Arc::new(conn);
                     let _ = group.add_member(conn_arc, remote_addr);
@@ -227,11 +245,15 @@ fn main() -> anyhow::Result<()> {
         // Deserialize Data packet
         if let Ok(packet) = DataPacket::from_bytes(&buffer[..n]) {
             if packet_count == 0 {
-                tracing::info!("Received first data packet: seq={}, dest_socket_id={}, size={}",
-                    packet.seq_number().as_raw(), packet.header.dest_socket_id, packet.payload.len());
+                tracing::info!(
+                    "Received first data packet: seq={}, dest_socket_id={}, size={}",
+                    packet.seq_number().as_raw(),
+                    packet.header.dest_socket_id,
+                    packet.payload.len()
+                );
             }
             match bonding.receiver.on_packet_received(packet, member_id) {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(e) => tracing::error!("Error processing data packet: {}", e),
             }
             packet_count += 1;

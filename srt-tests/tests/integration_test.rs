@@ -155,21 +155,15 @@ fn test_ack_nak_generation() {
     let ack_info = AckInfo::new(SeqNumber::new(100));
     let ack = ack_gen.generate_ack(ack_info, 9999);
 
-    assert_eq!(
-        ack.control_type(),
-        srt_protocol::packet::ControlType::Ack
-    );
+    assert_eq!(ack.control_type(), srt_protocol::packet::ControlType::Ack);
 
     // Generate NAK
-    let nak_info = srt_protocol::ack::NakInfo::new(vec![
-        srt_protocol::loss::LossRange::single(SeqNumber::new(50)),
-    ]);
+    let nak_info = srt_protocol::ack::NakInfo::new(vec![srt_protocol::loss::LossRange::single(
+        SeqNumber::new(50),
+    )]);
     let nak = nak_gen.generate_nak(nak_info, 9999).unwrap();
 
-    assert_eq!(
-        nak.control_type(),
-        srt_protocol::packet::ControlType::Nak
-    );
+    assert_eq!(nak.control_type(), srt_protocol::packet::ControlType::Nak);
 }
 
 #[test]
@@ -328,7 +322,7 @@ fn test_rtt_estimation() {
     // Add RTT samples
     estimator.update(100_000); // 100ms
     estimator.update(110_000); // 110ms
-    estimator.update(90_000);  // 90ms
+    estimator.update(90_000); // 90ms
 
     let srtt = estimator.srtt();
     assert!(srtt > 80_000 && srtt < 120_000);

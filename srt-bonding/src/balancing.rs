@@ -47,7 +47,7 @@ impl PathCapacity {
         PathCapacity {
             path_id,
             bandwidth_bps: 1_000_000, // Initial estimate: 1 MB/s
-            rtt_us: 100_000,           // Initial estimate: 100ms
+            rtt_us: 100_000,          // Initial estimate: 100ms
             loss_rate: 0.0,
             packets_in_flight: 0,
             last_update: Instant::now(),
@@ -154,14 +154,19 @@ impl LoadBalancer {
     }
 
     /// Select a path based on the balancing algorithm
-    fn select_path(&self, members: &[Arc<crate::group::GroupMember>]) -> Result<u32, BalancingError> {
+    fn select_path(
+        &self,
+        members: &[Arc<crate::group::GroupMember>],
+    ) -> Result<u32, BalancingError> {
         let capacities = self.capacities.read();
 
         match self.algorithm {
             BalancingAlgorithm::RoundRobin => {
                 // Simple round-robin
-                static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-                let index = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % members.len();
+                static COUNTER: std::sync::atomic::AtomicUsize =
+                    std::sync::atomic::AtomicUsize::new(0);
+                let index =
+                    COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % members.len();
                 Ok(members[index].connection.local_socket_id())
             }
 
@@ -292,7 +297,9 @@ impl LoadBalancer {
         }
 
         // Update member status
-        let _ = self.group.update_member_status(path_id, MemberStatus::Broken);
+        let _ = self
+            .group
+            .update_member_status(path_id, MemberStatus::Broken);
     }
 
     /// Get balancing statistics
@@ -382,8 +389,8 @@ mod tests {
     fn test_path_capacity_weight() {
         let mut capacity = PathCapacity::new(1);
         capacity.bandwidth_bps = 10_000_000; // 10 MB/s
-        capacity.rtt_us = 50_000;            // 50ms
-        capacity.loss_rate = 0.01;           // 1% loss
+        capacity.rtt_us = 50_000; // 50ms
+        capacity.loss_rate = 0.01; // 1% loss
 
         let weight = capacity.calculate_weight();
         assert!(weight > 0.0);

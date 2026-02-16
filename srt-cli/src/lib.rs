@@ -5,5 +5,5 @@
 pub mod config;
 pub mod stats;
 
-pub use config::{Config, SenderConfig, ReceiverConfig, BondingMode, PathConfig};
-pub use stats::{display_group_stats, display_compact_stats, format_bytes, format_bandwidth};
+pub use config::{BondingMode, Config, PathConfig, ReceiverConfig, SenderConfig};
+pub use stats::{display_compact_stats, display_group_stats, format_bandwidth, format_bytes};

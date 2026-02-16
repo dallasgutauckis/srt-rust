@@ -82,7 +82,8 @@ impl CongestionController {
 
     /// Get number of packets that can be sent
     pub fn packets_allowed(&self) -> u32 {
-        self.effective_window().saturating_sub(self.packets_in_flight)
+        self.effective_window()
+            .saturating_sub(self.packets_in_flight)
     }
 
     /// Record packet sent

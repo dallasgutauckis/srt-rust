@@ -285,7 +285,13 @@ impl Connection {
         initial_seq_num: SeqNumber,
         latency_ms: u16,
     ) -> Self {
-        let mut conn = Self::new(local_socket_id, local_addr, remote_addr, initial_seq_num, latency_ms);
+        let mut conn = Self::new(
+            local_socket_id,
+            local_addr,
+            remote_addr,
+            initial_seq_num,
+            latency_ms,
+        );
         conn.set_state(ConnectionState::Connected);
         conn.remote_socket_id = Some(999); // Mock remote socket ID for testing
         conn

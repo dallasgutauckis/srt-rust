@@ -5,9 +5,9 @@
 //! 2. Backup mode - Primary/backup with automatic failover
 //! 3. Load balancing mode - Distribute packets across paths
 
-use srt_bonding::*;
-use srt_protocol::{Connection, SeqNumber, DataPacket, MsgNumber};
 use bytes::Bytes;
+use srt_bonding::*;
+use srt_protocol::{Connection, DataPacket, MsgNumber, SeqNumber};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
@@ -21,7 +21,13 @@ fn test_addr(port: u16) -> SocketAddr {
 /// Helper to add a member to a group (creates connected connections for testing)
 fn add_test_member(group: &SocketGroup, id: u32, addr: SocketAddr) -> Result<u32, GroupError> {
     let local_addr = "127.0.0.1:8000".parse().unwrap();
-    let conn = Arc::new(Connection::new_connected(id, local_addr, addr, SeqNumber::new(1000), 120));
+    let conn = Arc::new(Connection::new_connected(
+        id,
+        local_addr,
+        addr,
+        SeqNumber::new(1000),
+        120,
+    ));
     let member_id = group.add_member(conn, addr)?;
     // Set member to Active status so it can send/receive
     group.update_member_status(member_id, MemberStatus::Active)?;
@@ -33,7 +39,7 @@ fn create_test_packet(seq: SeqNumber, data: &[u8]) -> DataPacket {
     DataPacket::new(
         seq,
         MsgNumber::new(seq.as_raw()),
-        0, // timestamp
+        0,   // timestamp
         123, // dest_socket_id
         Bytes::from(data.to_vec()),
     )
@@ -94,7 +100,10 @@ fn test_broadcast_mode_duplicate_detection() {
 
     // Check stats - packet delivered so buffered_packets or ready_packets
     let stats = bonding.receiver.stats();
-    assert!(stats.buffered_packets + stats.ready_packets >= 1, "At least 1 packet received");
+    assert!(
+        stats.buffered_packets + stats.ready_packets >= 1,
+        "At least 1 packet received"
+    );
 }
 
 #[test]
@@ -164,8 +173,8 @@ fn test_backup_mode_basic_primary_backup() {
     // Create backup bonding
     let bonding = BackupBonding::new(
         group.clone(),
-        Duration::from_secs(1),  // Health check interval
-        3,                        // Failure threshold
+        Duration::from_secs(1), // Health check interval
+        3,                      // Failure threshold
     );
 
     // Set primary and backups
@@ -191,7 +200,7 @@ fn test_backup_mode_automatic_failover() {
     let bonding = BackupBonding::new(
         group.clone(),
         Duration::from_millis(100),
-        2,  // Fail after 2 consecutive failures
+        2, // Fail after 2 consecutive failures
     );
 
     bonding.set_primary(1).unwrap();
@@ -218,11 +227,7 @@ fn test_backup_mode_manual_failover() {
     add_test_member(&group, 1, test_addr(9000)).unwrap();
     add_test_member(&group, 2, test_addr(9001)).unwrap();
 
-    let bonding = BackupBonding::new(
-        group.clone(),
-        Duration::from_secs(1),
-        3,
-    );
+    let bonding = BackupBonding::new(group.clone(), Duration::from_secs(1), 3);
 
     bonding.set_primary(1).unwrap();
     bonding.add_backup(2).unwrap();
@@ -248,11 +253,7 @@ fn test_backup_mode_primary_recovery() {
     add_test_member(&group, 1, test_addr(9000)).unwrap();
     add_test_member(&group, 2, test_addr(9001)).unwrap();
 
-    let bonding = BackupBonding::new(
-        group.clone(),
-        Duration::from_millis(50),
-        1,
-    );
+    let bonding = BackupBonding::new(group.clone(), Duration::from_millis(50), 1);
 
     bonding.set_primary(1).unwrap();
     bonding.add_backup(2).unwrap();
@@ -292,7 +293,7 @@ fn test_load_balancing_round_robin() {
     let balancer = LoadBalancer::new(
         group.clone(),
         BalancingAlgorithm::RoundRobin,
-        100,  // Max packets in flight
+        100, // Max packets in flight
     );
 
     // Send 9 packets - should distribute evenly (3 per path)
@@ -322,17 +323,13 @@ fn test_load_balancing_weighted_round_robin() {
     add_test_member(&group, 2, test_addr(9001)).unwrap();
     add_test_member(&group, 3, test_addr(9002)).unwrap();
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::WeightedRoundRobin,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::WeightedRoundRobin, 100);
 
     // Simulate different path performance via ACKs
     // Path 1 gets more ACKs (faster/higher bandwidth)
-    balancer.on_ack(1, 100);  // Path 1 is performing well
-    balancer.on_ack(2, 50);   // Path 2 medium performance
-    balancer.on_ack(3, 50);   // Path 3 medium performance
+    balancer.on_ack(1, 100); // Path 1 is performing well
+    balancer.on_ack(2, 50); // Path 2 medium performance
+    balancer.on_ack(3, 50); // Path 3 medium performance
 
     // Send 20 packets
     let mut path_counts = std::collections::HashMap::new();
@@ -370,7 +367,7 @@ fn test_load_balancing_least_loaded() {
     let balancer = LoadBalancer::new(
         group.clone(),
         BalancingAlgorithm::LeastLoaded,
-        10,  // Low limit to force balancing
+        10, // Low limit to force balancing
     );
 
     // Send multiple packets rapidly
@@ -392,17 +389,13 @@ fn test_load_balancing_fastest_path() {
     add_test_member(&group, 2, test_addr(9001)).unwrap();
     add_test_member(&group, 3, test_addr(9002)).unwrap();
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::FastestPath,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::FastestPath, 100);
 
     // Simulate different RTTs via ACK timing
     // More ACKs = faster path
-    balancer.on_ack(1, 50);   // Medium speed
-    balancer.on_ack(2, 100);  // Fast path (most ACKs)
-    balancer.on_ack(3, 20);   // Slow path
+    balancer.on_ack(1, 50); // Medium speed
+    balancer.on_ack(2, 100); // Fast path (most ACKs)
+    balancer.on_ack(3, 20); // Slow path
 
     // Send packets
     let mut path_counts = std::collections::HashMap::new();
@@ -429,16 +422,12 @@ fn test_load_balancing_highest_bandwidth() {
     add_test_member(&group, 2, test_addr(9001)).unwrap();
     add_test_member(&group, 3, test_addr(9002)).unwrap();
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::HighestBandwidth,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::HighestBandwidth, 100);
 
     // Simulate vastly different bandwidths via ACKs
-    balancer.on_ack(1, 10);    // Low bandwidth
-    balancer.on_ack(2, 1000);  // Very high bandwidth
-    balancer.on_ack(3, 100);   // Medium bandwidth
+    balancer.on_ack(1, 10); // Low bandwidth
+    balancer.on_ack(2, 1000); // Very high bandwidth
+    balancer.on_ack(3, 100); // Medium bandwidth
 
     // Send packets
     let mut path_counts = std::collections::HashMap::new();
@@ -464,8 +453,8 @@ fn test_load_balancing_highest_bandwidth() {
 #[test]
 fn test_packet_alignment_out_of_order() {
     let mut alignment = AlignmentBuffer::new(
-        1000,                      // Buffer size
-        Duration::from_secs(10),   // Max packet age
+        1000,                    // Buffer size
+        Duration::from_secs(10), // Max packet age
     );
 
     // Receive packets out of order (start from 0 as buffer expects)
@@ -475,10 +464,18 @@ fn test_packet_alignment_out_of_order() {
     let seq4 = SeqNumber::new(3);
 
     // Receive in order: 0, 3, 1, 2
-    alignment.add_packet(create_test_packet(seq1, b"data0"), 1, 10).unwrap();
-    alignment.add_packet(create_test_packet(seq4, b"data3"), 1, 10).unwrap();
-    alignment.add_packet(create_test_packet(seq2, b"data1"), 2, 15).unwrap();
-    alignment.add_packet(create_test_packet(seq3, b"data2"), 3, 12).unwrap();
+    alignment
+        .add_packet(create_test_packet(seq1, b"data0"), 1, 10)
+        .unwrap();
+    alignment
+        .add_packet(create_test_packet(seq4, b"data3"), 1, 10)
+        .unwrap();
+    alignment
+        .add_packet(create_test_packet(seq2, b"data1"), 2, 15)
+        .unwrap();
+    alignment
+        .add_packet(create_test_packet(seq3, b"data2"), 3, 12)
+        .unwrap();
 
     // Pop packets - should come out in order
     let p1 = alignment.pop_next().unwrap();
@@ -502,12 +499,20 @@ fn test_packet_alignment_gap_detection() {
     let mut alignment = AlignmentBuffer::new(1000, Duration::from_secs(10));
 
     // Add packets with gaps
-    alignment.add_packet(create_test_packet(SeqNumber::new(100), b"data"), 1, 10).unwrap();
-    alignment.add_packet(create_test_packet(SeqNumber::new(101), b"data"), 1, 10).unwrap();
+    alignment
+        .add_packet(create_test_packet(SeqNumber::new(100), b"data"), 1, 10)
+        .unwrap();
+    alignment
+        .add_packet(create_test_packet(SeqNumber::new(101), b"data"), 1, 10)
+        .unwrap();
     // Gap: 102 is missing
-    alignment.add_packet(create_test_packet(SeqNumber::new(103), b"data"), 1, 10).unwrap();
+    alignment
+        .add_packet(create_test_packet(SeqNumber::new(103), b"data"), 1, 10)
+        .unwrap();
     // Gap: 104-105 are missing
-    alignment.add_packet(create_test_packet(SeqNumber::new(106), b"data"), 1, 10).unwrap();
+    alignment
+        .add_packet(create_test_packet(SeqNumber::new(106), b"data"), 1, 10)
+        .unwrap();
 
     // Get missing sequences
     let missing = alignment.get_missing_sequences();
@@ -523,15 +528,17 @@ fn test_packet_alignment_per_path_stats() {
     // Receive from multiple paths (start from 0)
     for i in 0..50 {
         let seq = SeqNumber::new(i);
-        let path_id = (i % 3) + 1;  // Paths 1, 2, 3
+        let path_id = (i % 3) + 1; // Paths 1, 2, 3
         let rtt = match path_id {
-            1 => 10,  // Fast path
-            2 => 25,  // Medium path
-            3 => 50,  // Slow path
+            1 => 10, // Fast path
+            2 => 25, // Medium path
+            3 => 50, // Slow path
             _ => 20,
         };
 
-        alignment.add_packet(create_test_packet(seq, b"data"), path_id, rtt).unwrap();
+        alignment
+            .add_packet(create_test_packet(seq, b"data"), path_id, rtt)
+            .unwrap();
     }
 
     let stats = alignment.stats();
@@ -542,7 +549,10 @@ fn test_packet_alignment_per_path_stats() {
     while let Some(_packet) = alignment.pop_next() {
         delivered_count += 1;
     }
-    assert_eq!(delivered_count, 50, "All packets should be delivered in order");
+    assert_eq!(
+        delivered_count, 50,
+        "All packets should be delivered in order"
+    );
 
     // Verify final stats
     let final_stats = alignment.stats();

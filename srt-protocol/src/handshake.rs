@@ -222,12 +222,15 @@ impl UdtHandshake {
         let peer_addr = if buf[0..4] != [0, 0, 0, 0] || buf[4..16] == [0; 12] {
             // IPv4
             let ip = u32::from_be_bytes([buf[0], buf[1], buf[2], buf[3]]);
-            SocketAddr::from(([
-                ((ip >> 24) & 0xFF) as u8,
-                ((ip >> 16) & 0xFF) as u8,
-                ((ip >> 8) & 0xFF) as u8,
-                (ip & 0xFF) as u8,
-            ], 0))
+            SocketAddr::from((
+                [
+                    ((ip >> 24) & 0xFF) as u8,
+                    ((ip >> 16) & 0xFF) as u8,
+                    ((ip >> 8) & 0xFF) as u8,
+                    (ip & 0xFF) as u8,
+                ],
+                0,
+            ))
         } else {
             // IPv6
             let mut octets = [0u8; 16];
@@ -262,11 +265,7 @@ pub struct SrtHandshakeExtension {
 
 impl SrtHandshakeExtension {
     /// Create new SRT extension
-    pub fn new(
-        options: SrtOptions,
-        recv_latency_ms: u16,
-        send_latency_ms: u16,
-    ) -> Self {
+    pub fn new(options: SrtOptions, recv_latency_ms: u16, send_latency_ms: u16) -> Self {
         let latency = ((recv_latency_ms as u32) << 16) | (send_latency_ms as u32);
 
         SrtHandshakeExtension {
@@ -425,13 +424,8 @@ mod tests {
 
     #[test]
     fn test_udt_handshake_roundtrip() {
-        let hs = UdtHandshake::new_request(
-            1000,
-            1456,
-            8192,
-            12345,
-            "127.0.0.1:9000".parse().unwrap(),
-        );
+        let hs =
+            UdtHandshake::new_request(1000, 1456, 8192, 12345, "127.0.0.1:9000".parse().unwrap());
 
         let bytes = hs.to_bytes();
         let decoded = UdtHandshake::from_bytes(&bytes).unwrap();

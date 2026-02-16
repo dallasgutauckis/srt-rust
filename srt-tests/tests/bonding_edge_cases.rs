@@ -9,9 +9,9 @@
 //! 6. Concurrent path additions/removals during transmission
 //! 7. Maximum capacity scenarios (10+ paths)
 
-use srt_bonding::*;
-use srt_protocol::{Connection, SeqNumber, DataPacket, MsgNumber};
 use bytes::Bytes;
+use srt_bonding::*;
+use srt_protocol::{Connection, DataPacket, MsgNumber, SeqNumber};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::thread;
@@ -25,7 +25,13 @@ fn test_addr(port: u16) -> SocketAddr {
 /// Helper to add a member to a group (creates connected connections for testing)
 fn add_test_member(group: &SocketGroup, id: u32, addr: SocketAddr) -> Result<u32, GroupError> {
     let local_addr = "127.0.0.1:8000".parse().unwrap();
-    let conn = Arc::new(Connection::new_connected(id, local_addr, addr, SeqNumber::new(1000), 120));
+    let conn = Arc::new(Connection::new_connected(
+        id,
+        local_addr,
+        addr,
+        SeqNumber::new(1000),
+        120,
+    ));
     let member_id = group.add_member(conn, addr)?;
     // Set member to Active status so it can send/receive
     group.update_member_status(member_id, MemberStatus::Active)?;
@@ -37,7 +43,7 @@ fn create_test_packet(seq: SeqNumber, data: &[u8]) -> DataPacket {
     DataPacket::new(
         seq,
         MsgNumber::new(seq.as_raw()),
-        0, // timestamp
+        0,   // timestamp
         123, // dest_socket_id
         Bytes::from(data.to_vec()),
     )
@@ -56,7 +62,9 @@ fn test_sequence_wraparound_at_max() {
     // Add packets 0, 1, 2, 3 in order
     for i in 0..4 {
         let seq = SeqNumber::new(i);
-        alignment.add_packet(create_test_packet(seq, b"data"), 1, 10).unwrap();
+        alignment
+            .add_packet(create_test_packet(seq, b"data"), 1, 10)
+            .unwrap();
     }
 
     // Should be able to pop in correct order
@@ -93,8 +101,14 @@ fn test_wraparound_duplicate_detection() {
     let packet2 = create_test_packet(SeqNumber::new(1), b"data2");
 
     // Receive from path 1
-    bonding.receiver.on_packet_received(packet1.clone(), 1).unwrap();
-    bonding.receiver.on_packet_received(packet2.clone(), 1).unwrap();
+    bonding
+        .receiver
+        .on_packet_received(packet1.clone(), 1)
+        .unwrap();
+    bonding
+        .receiver
+        .on_packet_received(packet2.clone(), 1)
+        .unwrap();
 
     // Receive duplicates from path 2 - should error
     let dup1 = bonding.receiver.on_packet_received(packet1, 2);
@@ -113,7 +127,9 @@ fn test_wraparound_with_large_gap() {
     // Add packets 0, 1, 2, then skip to 13 (gap of 10)
     for i in [0, 1, 2, 13] {
         let seq = SeqNumber::new(i);
-        alignment.add_packet(create_test_packet(seq, b"data"), 1, 10).unwrap();
+        alignment
+            .add_packet(create_test_packet(seq, b"data"), 1, 10)
+            .unwrap();
     }
 
     // Pop first 3 packets
@@ -123,7 +139,10 @@ fn test_wraparound_with_large_gap() {
 
     // Should detect gap (missing 3-12)
     let missing = alignment.get_missing_sequences();
-    assert!(!missing.is_empty(), "Should detect missing packets with large gap");
+    assert!(
+        !missing.is_empty(),
+        "Should detect missing packets with large gap"
+    );
 }
 
 // ============================================================================
@@ -167,11 +186,7 @@ fn test_all_paths_fail_backup() {
     add_test_member(&group, 2, test_addr(9001)).unwrap();
     add_test_member(&group, 3, test_addr(9002)).unwrap();
 
-    let bonding = BackupBonding::new(
-        group.clone(),
-        Duration::from_millis(50),
-        1,
-    );
+    let bonding = BackupBonding::new(group.clone(), Duration::from_millis(50), 1);
 
     bonding.set_primary(1).unwrap();
     bonding.add_backup(2).unwrap();
@@ -200,11 +215,7 @@ fn test_all_paths_fail_load_balancer() {
     add_test_member(&group, 2, test_addr(9001)).unwrap();
     add_test_member(&group, 3, test_addr(9002)).unwrap();
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::RoundRobin,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::RoundRobin, 100);
 
     // Mark all as broken
     group.update_member_status(1, MemberStatus::Broken).unwrap();
@@ -233,22 +244,26 @@ fn test_severely_out_of_order_packets() {
     let mut alignment = AlignmentBuffer::new(10000, Duration::from_secs(30));
 
     // Create contiguous sequence numbers (0-14) but in severely random order
-    let sequences = vec![
-        10, 5, 12, 7, 14, 1, 9, 3, 13, 0, 6, 11, 2, 8, 4
-    ];
+    let sequences = vec![10, 5, 12, 7, 14, 1, 9, 3, 13, 0, 6, 11, 2, 8, 4];
 
     // Add all packets in random order
     for seq_num in sequences {
         let seq = SeqNumber::new(seq_num);
         let data = format!("data_{}", seq_num).into_bytes();
-        alignment.add_packet(create_test_packet(seq, &data), 1, 10).unwrap();
+        alignment
+            .add_packet(create_test_packet(seq, &data), 1, 10)
+            .unwrap();
     }
 
     // Pop all packets - should come out in order (0, 1, 2, ... 14)
     let mut count = 0;
 
     while let Some(packet) = alignment.pop_next() {
-        assert_eq!(packet.packet.seq_number().as_raw(), count, "Packets should be in order");
+        assert_eq!(
+            packet.packet.seq_number().as_raw(),
+            count,
+            "Packets should be in order"
+        );
         count += 1;
     }
 
@@ -271,7 +286,9 @@ fn test_extreme_delay_variation() {
             _ => 100,
         };
 
-        alignment.add_packet(create_test_packet(seq, b"data"), path_id, rtt).unwrap();
+        alignment
+            .add_packet(create_test_packet(seq, b"data"), path_id, rtt)
+            .unwrap();
     }
 
     // Should handle all packets despite extreme RTT differences
@@ -401,7 +418,10 @@ fn test_partial_network_failure() {
     let send_result = result.unwrap();
     // With mock members (no actual sockets), send_count will be 0
     // But the operation should succeed without panic
-    assert!(send_result.sent_count <= 3, "Should attempt send on active paths");
+    assert!(
+        send_result.sent_count <= 3,
+        "Should attempt send on active paths"
+    );
     // failed_members tracking depends on actual socket operations
 }
 
@@ -510,7 +530,11 @@ fn test_send_during_member_changes() {
 fn test_max_paths_broadcast() {
     const MAX_PATHS: u32 = 15;
 
-    let group = Arc::new(SocketGroup::new(1, GroupType::Broadcast, MAX_PATHS as usize));
+    let group = Arc::new(SocketGroup::new(
+        1,
+        GroupType::Broadcast,
+        MAX_PATHS as usize,
+    ));
 
     // Add maximum number of paths
     for i in 1..=MAX_PATHS {
@@ -527,7 +551,8 @@ fn test_max_paths_broadcast() {
     let send_result = result.unwrap();
     assert_eq!(
         send_result.sent_count, MAX_PATHS as usize,
-        "Should send to all {} paths", MAX_PATHS
+        "Should send to all {} paths",
+        MAX_PATHS
     );
 
     // Verify all paths are in the group
@@ -539,17 +564,17 @@ fn test_max_paths_broadcast() {
 fn test_max_paths_load_balancing() {
     const MAX_PATHS: u32 = 12;
 
-    let group = Arc::new(SocketGroup::new(1, GroupType::Broadcast, MAX_PATHS as usize));
+    let group = Arc::new(SocketGroup::new(
+        1,
+        GroupType::Broadcast,
+        MAX_PATHS as usize,
+    ));
 
     for i in 1..=MAX_PATHS {
         add_test_member(&group, i, test_addr(9000 + i as u16)).unwrap();
     }
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::RoundRobin,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::RoundRobin, 100);
 
     // Send many packets
     for _seq in 1..=120 {
@@ -566,7 +591,11 @@ fn test_max_paths_load_balancing() {
 fn test_max_paths_with_varying_quality() {
     const NUM_PATHS: u32 = 10;
 
-    let group = Arc::new(SocketGroup::new(1, GroupType::Broadcast, NUM_PATHS as usize));
+    let group = Arc::new(SocketGroup::new(
+        1,
+        GroupType::Broadcast,
+        NUM_PATHS as usize,
+    ));
 
     // Add paths with varying quality
     for i in 1..=NUM_PATHS {
@@ -574,9 +603,15 @@ fn test_max_paths_with_varying_quality() {
 
         // Vary status: some active, some idle, some broken
         match i % 3 {
-            0 => { group.update_member_status(i, MemberStatus::Active).unwrap(); },
-            1 => { group.update_member_status(i, MemberStatus::Idle).unwrap(); },
-            2 => { group.update_member_status(i, MemberStatus::Broken).unwrap(); },
+            0 => {
+                group.update_member_status(i, MemberStatus::Active).unwrap();
+            }
+            1 => {
+                group.update_member_status(i, MemberStatus::Idle).unwrap();
+            }
+            2 => {
+                group.update_member_status(i, MemberStatus::Broken).unwrap();
+            }
             _ => {}
         }
     }
@@ -591,7 +626,8 @@ fn test_max_paths_with_varying_quality() {
         Ok(send_result) => {
             println!(
                 "Sent to {} paths, {} failed",
-                send_result.sent_count, send_result.failed_members.len()
+                send_result.sent_count,
+                send_result.failed_members.len()
             );
             assert!(send_result.sent_count > 0, "Should send to some paths");
         }
@@ -613,7 +649,9 @@ fn test_stress_sequence_wraparound_continuous() {
     for i in 0..300 {
         let seq_num = start_seq.wrapping_add(i);
         let seq = SeqNumber::new(seq_num & MAX_SEQ);
-        alignment.add_packet(create_test_packet(seq, b"stress"), 1, 10).unwrap();
+        alignment
+            .add_packet(create_test_packet(seq, b"stress"), 1, 10)
+            .unwrap();
     }
 
     // Should handle continuous operation

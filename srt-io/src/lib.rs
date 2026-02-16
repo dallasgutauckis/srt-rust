@@ -9,5 +9,5 @@ pub mod time;
 // Future modules
 // pub mod epoll;
 
-pub use socket::{SrtSocket, SocketError};
+pub use socket::{SocketError, SrtSocket};
 pub use time::{RateLimiter, Timer, Timestamp};

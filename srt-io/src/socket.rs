@@ -49,9 +49,7 @@ impl SrtSocket {
         // Set non-blocking mode
         socket.set_nonblocking(true)?;
 
-        Ok(SrtSocket {
-            inner: socket,
-        })
+        Ok(SrtSocket { inner: socket })
     }
 
     /// Create a new unbound SRT socket
@@ -61,9 +59,7 @@ impl SrtSocket {
 
         socket.set_nonblocking(true)?;
 
-        Ok(SrtSocket {
-            inner: socket,
-        })
+        Ok(SrtSocket { inner: socket })
     }
 
     /// Set the send buffer size
@@ -90,7 +86,10 @@ impl SrtSocket {
 
     /// Get the local address this socket is bound to
     pub fn local_addr(&self) -> Result<SocketAddr, SocketError> {
-        self.inner.local_addr()?.as_socket().ok_or(SocketError::InvalidAddress)
+        self.inner
+            .local_addr()?
+            .as_socket()
+            .ok_or(SocketError::InvalidAddress)
     }
 
     /// Send data to the given address

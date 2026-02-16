@@ -39,16 +39,18 @@ fn msg_number_strategy() -> impl Strategy<Value = MsgNumber> {
         packet_boundary_strategy(),
         any::<bool>(), // in_order
         encryption_key_strategy(),
-        any::<bool>(), // retransmitted
+        any::<bool>(),      // retransmitted
         0u32..=0x03FF_FFFF, // seq (26 bits)
     )
-        .prop_map(|(boundary, in_order, encryption_key, retransmitted, seq)| MsgNumber {
-            boundary,
-            in_order,
-            encryption_key,
-            retransmitted,
-            seq,
-        })
+        .prop_map(
+            |(boundary, in_order, encryption_key, retransmitted, seq)| MsgNumber {
+                boundary,
+                in_order,
+                encryption_key,
+                retransmitted,
+                seq,
+            },
+        )
 }
 
 fn control_type_strategy() -> impl Strategy<Value = ControlType> {
@@ -68,13 +70,11 @@ fn control_type_strategy() -> impl Strategy<Value = ControlType> {
 
 #[allow(dead_code)]
 fn payload_strategy() -> impl Strategy<Value = Bytes> {
-    prop::collection::vec(any::<u8>(), 0..=MAX_PAYLOAD_SIZE)
-        .prop_map(Bytes::from)
+    prop::collection::vec(any::<u8>(), 0..=MAX_PAYLOAD_SIZE).prop_map(Bytes::from)
 }
 
 fn small_payload_strategy() -> impl Strategy<Value = Bytes> {
-    prop::collection::vec(any::<u8>(), 0..=256)
-        .prop_map(Bytes::from)
+    prop::collection::vec(any::<u8>(), 0..=256).prop_map(Bytes::from)
 }
 
 // Property tests

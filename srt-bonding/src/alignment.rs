@@ -284,15 +284,12 @@ impl PathTracker {
 
     /// Record packet reception from a path
     pub fn record_packet(&mut self, path_id: u32, was_first: bool, rtt_us: u32) {
-        let stats = self
-            .paths
-            .entry(path_id)
-            .or_insert_with(|| PathStats {
-                path_id,
-                packets_received: 0,
-                packets_first: 0,
-                avg_rtt_us: 0,
-            });
+        let stats = self.paths.entry(path_id).or_insert_with(|| PathStats {
+            path_id,
+            packets_received: 0,
+            packets_first: 0,
+            avg_rtt_us: 0,
+        });
 
         stats.packets_received += 1;
         if was_first {

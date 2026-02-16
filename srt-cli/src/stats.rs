@@ -69,19 +69,30 @@ pub fn display_group_stats(stats: &GroupStats) {
     println!("\n┌─────────────────────────────────────────────────────────────┐");
     println!("│ GROUP STATISTICS                                            │");
     println!("├─────────────────────────────────────────────────────────────┤");
-    println!("│ Mode: {:?}                                          ", stats.group_type);
-    println!("│ Members: {} active / {} total                               ",
-             stats.active_member_count, stats.member_count);
-    println!("│ Uptime: {}                                              ",
-             format_duration(stats.uptime));
+    println!(
+        "│ Mode: {:?}                                          ",
+        stats.group_type
+    );
+    println!(
+        "│ Members: {} active / {} total                               ",
+        stats.active_member_count, stats.member_count
+    );
+    println!(
+        "│ Uptime: {}                                              ",
+        format_duration(stats.uptime)
+    );
     println!("├─────────────────────────────────────────────────────────────┤");
     println!("│ AGGREGATE STATISTICS                                        │");
     println!("├─────────────────────────────────────────────────────────────┤");
-    println!("│ Packets:  {} sent / {} received                       ",
-             stats.total_packets_sent, stats.total_packets_received);
-    println!("│ Bytes:    {} sent / {} received                 ",
-             format_bytes(stats.total_bytes_sent),
-             format_bytes(stats.total_bytes_received));
+    println!(
+        "│ Packets:  {} sent / {} received                       ",
+        stats.total_packets_sent, stats.total_packets_received
+    );
+    println!(
+        "│ Bytes:    {} sent / {} received                 ",
+        format_bytes(stats.total_bytes_sent),
+        format_bytes(stats.total_bytes_received)
+    );
     println!("└─────────────────────────────────────────────────────────────┘");
 
     if !stats.member_stats.is_empty() {
@@ -115,8 +126,10 @@ fn display_member_stats_row(stats: &MemberStats) {
         "N/A".to_string()
     };
 
-    println!("│ {:4} │ {:7} │ {:8} │ {:8} │ {:8} │ {:8} │",
-             stats.member_id, status, sent, received, rtt, bandwidth);
+    println!(
+        "│ {:4} │ {:7} │ {:8} │ {:8} │ {:8} │ {:8} │",
+        stats.member_id, status, sent, received, rtt, bandwidth
+    );
 }
 
 /// Display compact stats on one line (for continuous updates)
@@ -127,13 +140,15 @@ pub fn display_compact_stats(stats: &GroupStats, elapsed: Duration) {
         0
     };
 
-    print!("\r[{:8}] Active: {}/{} | Sent: {} | Rate: {} | Packets: {}         ",
-           format_duration(stats.uptime),
-           stats.active_member_count,
-           stats.member_count,
-           format_bytes(stats.total_bytes_sent),
-           format_bandwidth(throughput_bps),
-           stats.total_packets_sent);
+    print!(
+        "\r[{:8}] Active: {}/{} | Sent: {} | Rate: {} | Packets: {}         ",
+        format_duration(stats.uptime),
+        stats.active_member_count,
+        stats.member_count,
+        format_bytes(stats.total_bytes_sent),
+        format_bandwidth(throughput_bps),
+        stats.total_packets_sent
+    );
 
     use std::io::Write;
     std::io::stdout().flush().unwrap();

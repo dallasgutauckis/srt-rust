@@ -355,12 +355,16 @@ impl DataPacket {
 
     /// Get the sequence number
     pub fn seq_number(&self) -> SeqNumber {
-        self.header.seq_number().expect("Data packet has seq number")
+        self.header
+            .seq_number()
+            .expect("Data packet has seq number")
     }
 
     /// Get the message number
     pub fn msg_number(&self) -> MsgNumber {
-        self.header.msg_number().expect("Data packet has msg number")
+        self.header
+            .msg_number()
+            .expect("Data packet has msg number")
     }
 
     /// Total size of the packet (header + payload)
@@ -672,8 +676,7 @@ mod tests {
         assert!(packet.is_data());
 
         // Test control packet auto-detection
-        let control_packet =
-            ControlPacket::new(ControlType::Ack, 0, 0, 1000, 9999, Bytes::new());
+        let control_packet = ControlPacket::new(ControlType::Ack, 0, 0, 1000, 9999, Bytes::new());
         let bytes = control_packet.to_bytes();
         let packet = Packet::from_bytes(&bytes).unwrap();
         assert!(packet.is_control());

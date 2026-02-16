@@ -119,8 +119,7 @@ impl GroupMember {
 
     /// Check if member is active
     pub fn is_active(&self) -> bool {
-        self.stats.read().status == MemberStatus::Active
-            && self.connection.is_connected()
+        self.stats.read().status == MemberStatus::Active && self.connection.is_connected()
     }
 
     /// Update member status

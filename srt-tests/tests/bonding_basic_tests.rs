@@ -2,9 +2,9 @@
 //!
 //! These tests verify core functionality using the real API signatures.
 
-use srt_bonding::*;
-use srt_protocol::{Connection, SeqNumber, DataPacket, MsgNumber};
 use bytes::Bytes;
+use srt_bonding::*;
+use srt_protocol::{Connection, DataPacket, MsgNumber, SeqNumber};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -17,7 +17,13 @@ fn test_addr(port: u16) -> SocketAddr {
 /// Helper to add a member to a group (creates connected connections for testing)
 fn add_test_member(group: &SocketGroup, id: u32, addr: SocketAddr) -> Result<u32, GroupError> {
     let local_addr = "127.0.0.1:8000".parse().unwrap();
-    let conn = Arc::new(Connection::new_connected(id, local_addr, addr, SeqNumber::new(1000), 120));
+    let conn = Arc::new(Connection::new_connected(
+        id,
+        local_addr,
+        addr,
+        SeqNumber::new(1000),
+        120,
+    ));
     let member_id = group.add_member(conn, addr)?;
     // Set member to Active status so it can send/receive
     group.update_member_status(member_id, MemberStatus::Active)?;
@@ -148,11 +154,7 @@ fn test_backup_creation() {
     add_test_member(&group, 1, test_addr(9000)).unwrap();
     add_test_member(&group, 2, test_addr(9001)).unwrap();
 
-    let bonding = BackupBonding::new(
-        group.clone(),
-        Duration::from_secs(1),
-        3,
-    );
+    let bonding = BackupBonding::new(group.clone(), Duration::from_secs(1), 3);
 
     bonding.set_primary(1).unwrap();
     bonding.add_backup(2).unwrap();
@@ -169,11 +171,7 @@ fn test_backup_manual_failover() {
     add_test_member(&group, 1, test_addr(9000)).unwrap();
     add_test_member(&group, 2, test_addr(9001)).unwrap();
 
-    let bonding = BackupBonding::new(
-        group.clone(),
-        Duration::from_secs(1),
-        3,
-    );
+    let bonding = BackupBonding::new(group.clone(), Duration::from_secs(1), 3);
 
     bonding.set_primary(1).unwrap();
     bonding.add_backup(2).unwrap();
@@ -199,11 +197,7 @@ fn test_load_balancer_creation() {
         add_test_member(&group, i, test_addr(9000 + i as u16)).unwrap();
     }
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::RoundRobin,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::RoundRobin, 100);
 
     // Verify group has members
     let group_stats = group.get_stats();
@@ -222,11 +216,7 @@ fn test_load_balancer_round_robin() {
         add_test_member(&group, i, test_addr(9000 + i as u16)).unwrap();
     }
 
-    let balancer = LoadBalancer::new(
-        group.clone(),
-        BalancingAlgorithm::RoundRobin,
-        100,
-    );
+    let balancer = LoadBalancer::new(group.clone(), BalancingAlgorithm::RoundRobin, 100);
 
     // Verify algorithm is set correctly
     let stats = balancer.stats();
@@ -255,7 +245,9 @@ fn test_alignment_in_order_packets() {
     // Add packets in order
     for i in 0..5 {
         let seq = SeqNumber::new(100 + i);
-        buffer.add_packet(create_test_packet(seq, b"data"), 1, 10).unwrap();
+        buffer
+            .add_packet(create_test_packet(seq, b"data"), 1, 10)
+            .unwrap();
     }
 
     let stats = buffer.stats();
@@ -271,9 +263,15 @@ fn test_alignment_out_of_order() {
     let seq3 = SeqNumber::new(2);
 
     // Add out of order: 0, 2, 1
-    buffer.add_packet(create_test_packet(seq1, b"data1"), 1, 10).unwrap();
-    buffer.add_packet(create_test_packet(seq3, b"data3"), 1, 10).unwrap();
-    buffer.add_packet(create_test_packet(seq2, b"data2"), 2, 15).unwrap();
+    buffer
+        .add_packet(create_test_packet(seq1, b"data1"), 1, 10)
+        .unwrap();
+    buffer
+        .add_packet(create_test_packet(seq3, b"data3"), 1, 10)
+        .unwrap();
+    buffer
+        .add_packet(create_test_packet(seq2, b"data2"), 2, 15)
+        .unwrap();
 
     // Pop should come out in order
     let p1 = buffer.pop_next().unwrap();
@@ -290,10 +288,16 @@ fn test_alignment_out_of_order() {
 fn test_alignment_gap_detection() {
     let mut buffer = AlignmentBuffer::new(1000, Duration::from_secs(10));
 
-    buffer.add_packet(create_test_packet(SeqNumber::new(0), b"data"), 1, 10).unwrap();
-    buffer.add_packet(create_test_packet(SeqNumber::new(1), b"data"), 1, 10).unwrap();
+    buffer
+        .add_packet(create_test_packet(SeqNumber::new(0), b"data"), 1, 10)
+        .unwrap();
+    buffer
+        .add_packet(create_test_packet(SeqNumber::new(1), b"data"), 1, 10)
+        .unwrap();
     // Gap: 2 missing
-    buffer.add_packet(create_test_packet(SeqNumber::new(3), b"data"), 1, 10).unwrap();
+    buffer
+        .add_packet(create_test_packet(SeqNumber::new(3), b"data"), 1, 10)
+        .unwrap();
 
     let missing = buffer.get_missing_sequences();
     assert!(missing.contains(&SeqNumber::new(2)), "Should detect gap");
@@ -329,7 +333,9 @@ fn test_sequence_wraparound() {
     // Add packets in sequence
     for i in 0..5 {
         let seq = SeqNumber::new(i);
-        buffer.add_packet(create_test_packet(seq, b"data"), 1, 10).unwrap();
+        buffer
+            .add_packet(create_test_packet(seq, b"data"), 1, 10)
+            .unwrap();
     }
 
     // Verify sequence numbers work correctly
