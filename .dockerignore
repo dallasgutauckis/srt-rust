@@ -1,0 +1,29 @@
+# Git
+.git/
+.github/
+.gitignore
+
+# Build artifacts
+target/
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation
+*.md
+docs/
+
+# Scripts
+scripts/
+*.sh
+
+# Tests
+tests/
+
+# Temporary files
+/tmp/
+*.log

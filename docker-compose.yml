@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # SRT Receiver - receives SRT stream and relays to UDP
+  srt-receiver:
+    image: ghcr.io/YOUR_USERNAME/srt-rust:latest
+    command: srt-receiver --listen 9000 --output udp://host.docker.internal:5000 -v
+    ports:
+      - "9000:9000/udp"
+    networks:
+      - srt-network
+    restart: unless-stopped
+
+  # SRT Sender - sends test pattern via SRT
+  # Uncomment to run a test sender
+  # srt-sender:
+  #   image: ghcr.io/YOUR_USERNAME/srt-rust:latest
+  #   command: srt-sender --path srt-receiver:9000 -v
+  #   stdin_open: true
+  #   depends_on:
+  #     - srt-receiver
+  #   networks:
+  #     - srt-network
+
+networks:
+  srt-network:
+    driver: bridge
