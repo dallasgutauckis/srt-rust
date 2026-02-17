@@ -14,6 +14,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TLS/encryption support
 - Performance optimizations
 
+## [0.1.3] - 2026-02-17
+
+### Added
+- **Interface Binding**: `--bind` option for srt-sender to specify local network interface per path
+  - Enables multi-adapter bonding (multiple cellular modems, cellular + WiFi, etc.)
+  - Supports IP-only (`--bind 192.168.1.10`) or IP:port (`--bind 192.168.1.10:6000`)
+  - One bind per path for fine-grained control
+
+### Documentation
+- Added interface binding examples to CLI_GUIDE.md
+- Documented multi-adapter use cases
+
+## [0.1.2] - 2026-02-17
+
+### Security
+- **Removed handshake bypass**: Deleted `Connection::new_connected()` method
+- **Enforced handshake protocol**: All connections now require proper SRT handshake
+- **Reject unauthenticated data**: Receivers reject packets from non-handshaked sources
+
+### Fixed
+- **Packet buffering**: Fixed packets not being written to output
+  - Added immediate flush after writing ready packets
+  - Previously only flushed every 50 packets, causing data loss on termination
+
+### Testing
+- Updated all tests to use real handshake logic instead of bypass
+- Added comprehensive E2E test suite (`test-e2e.sh`)
+- Added handshake requirement verification test (`test-handshake-required.sh`)
+- All 177 unit tests passing
+
+### Documentation
+- Added E2E-TESTS.md with test documentation
+
 ## [0.1.0] - 2026-02-11
 
 ### Added

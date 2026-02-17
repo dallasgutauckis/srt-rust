@@ -115,9 +115,10 @@ SRT multi-path sender
 Usage: srt-sender [OPTIONS]
 
 Options:
-  -i, --input <INPUT>              Input file (use '-' for stdin) [default: -]
+  -i, --input <INPUT>              Input file (use '-' for stdin, 'udp://host:port' for UDP) [default: -]
   -g, --group <GROUP>              Bonding mode (broadcast, backup, balancing) [default: broadcast]
   -p, --path <PATH>                Output paths (format: host:port) [can be repeated]
+  -b, --bind <BIND>                Local bind addresses for each path (format: ip or ip:port) [can be repeated]
       --fec-overhead <FEC_OVERHEAD> FEC overhead percentage [default: 0]
       --stats <STATS>              Statistics interval in seconds [default: 1]
   -v, --verbose                    Verbose output
@@ -215,6 +216,45 @@ Options:
   --path 203.0.113.10:9000  # ISP 1
   --path 198.51.100.20:9000 # ISP 2
 ```
+
+### 4. Using Specific Network Interfaces
+
+When you have multiple network adapters and need to control which interface each path uses:
+
+```bash
+# Single interface example - receive UDP on localhost, send via specific interface
+./srt-sender \
+  --input udp://127.0.0.1:5001 \
+  --path 109.48.76.29:5000 \
+  --bind 192.168.1.10
+
+# Multiple interfaces for bonding (uses different adapters for each path)
+./srt-sender \
+  --input udp://127.0.0.1:5001 \
+  --path 109.48.76.29:5000 \
+  --path 109.48.76.29:5000 \
+  --bind 192.168.1.10 \
+  --bind 192.168.2.10
+
+# With specific source ports (if needed)
+./srt-sender \
+  --input udp://127.0.0.1:5001 \
+  --path 109.48.76.29:5000 \
+  --path 109.48.76.29:5000 \
+  --bind 192.168.1.10:6000 \
+  --bind 192.168.2.10:6001
+```
+
+**Use cases:**
+- Multiple cellular modems (each has its own IP on different interfaces)
+- Bonding cellular + WiFi (force traffic over specific adapters)
+- Multi-homed servers (choose which WAN link to use)
+
+**How it works:**
+- `--bind` without port: Uses specified IP with random port (e.g., `192.168.1.10`)
+- `--bind` with port: Uses specified IP and port (e.g., `192.168.1.10:6000`)
+- One `--bind` per `--path` for fine control
+- If fewer `--bind` than `--path`, remaining paths use default routing
 
 ---
 
