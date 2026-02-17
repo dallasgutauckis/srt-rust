@@ -947,7 +947,7 @@ dependencies = [
 
 [[package]]
 name = "srt"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "crossbeam",
@@ -963,7 +963,7 @@ dependencies = [
 
 [[package]]
 name = "srt-bonding"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "crossbeam",
@@ -977,7 +977,7 @@ dependencies = [
 
 [[package]]
 name = "srt-cli"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "bytes",
@@ -995,7 +995,7 @@ dependencies = [
 
 [[package]]
 name = "srt-crypto"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "proptest",
@@ -1005,7 +1005,7 @@ dependencies = [
 
 [[package]]
 name = "srt-io"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "parking_lot",
  "proptest",
@@ -1016,7 +1016,7 @@ dependencies = [
 
 [[package]]
 name = "srt-protocol"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "criterion",
@@ -1028,7 +1028,7 @@ dependencies = [
 
 [[package]]
 name = "srt-tests"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "proptest",

@@ -30,6 +30,11 @@ struct Args {
     #[arg(short, long)]
     path: Vec<String>,
 
+    /// Local bind addresses for each path (optional, format: ip:port or just ip)
+    /// If port is 0 or omitted, a random port will be used
+    #[arg(short, long)]
+    bind: Vec<String>,
+
     /// FEC overhead percentage
     #[arg(long, default_value = "0")]
     fec_overhead: u8,
@@ -165,7 +170,19 @@ fn main() -> anyhow::Result<()> {
 
     for (idx, path_str) in args.path.iter().enumerate() {
         let remote_addr: SocketAddr = path_str.parse()?;
-        let local_addr: SocketAddr = if remote_addr.ip().is_loopback() {
+
+        // Determine local bind address
+        let local_addr: SocketAddr = if idx < args.bind.len() {
+            // User specified a bind address for this path
+            let bind_str = &args.bind[idx];
+            if bind_str.contains(':') {
+                // Full address with port
+                bind_str.parse()?
+            } else {
+                // Just IP, use port 0 (random)
+                format!("{}:0", bind_str).parse()?
+            }
+        } else if remote_addr.ip().is_loopback() {
             "127.0.0.1:0".parse()?
         } else {
             "0.0.0.0:0".parse()?
