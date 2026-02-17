@@ -274,29 +274,6 @@ impl Connection {
         self.state() == ConnectionState::Connected
     }
 
-    /// Create a test connection in connected state
-    ///
-    /// **For testing only** - Creates a connection that is already in the Connected
-    /// state and can immediately send/receive data without handshake.
-    pub fn new_connected(
-        local_socket_id: u32,
-        local_addr: SocketAddr,
-        remote_addr: SocketAddr,
-        initial_seq_num: SeqNumber,
-        latency_ms: u16,
-    ) -> Self {
-        let mut conn = Self::new(
-            local_socket_id,
-            local_addr,
-            remote_addr,
-            initial_seq_num,
-            latency_ms,
-        );
-        conn.set_state(ConnectionState::Connected);
-        conn.remote_socket_id = Some(999); // Mock remote socket ID for testing
-        conn
-    }
-
     /// Check if connection is closed
     pub fn is_closed(&self) -> bool {
         matches!(self.state(), ConnectionState::Closed)

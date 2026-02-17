@@ -10,7 +10,7 @@
 use clap::Parser;
 use srt_bonding::*;
 use srt_io::SrtSocket;
-use srt_protocol::{Connection, DataPacket, SeqNumber};
+use srt_protocol::DataPacket;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufWriter, Write};
@@ -255,8 +255,7 @@ fn relay_srt_input(
     let bonding = Arc::new(BroadcastBonding::new(group.clone()));
 
     // Track remote addresses to member IDs
-    let mut addr_to_member: HashMap<SocketAddr, u32> = HashMap::new();
-    let mut next_member_id = 1u32;
+    let addr_to_member: HashMap<SocketAddr, u32> = HashMap::new();
 
     // Statistics thread
     let bonding_stats = bonding.clone();
@@ -304,29 +303,17 @@ fn relay_srt_input(
             }
         };
 
-        // Get or create member ID
-        let member_id = *addr_to_member.entry(remote_addr).or_insert_with(|| {
-            let id = next_member_id;
-            next_member_id += 1;
-
-            tracing::info!("New path detected: {} (member {})", remote_addr, id);
-
-            let conn = Arc::new(Connection::new_connected(
-                id,
-                socket.local_addr().unwrap(),
-                remote_addr,
-                SeqNumber::new(0),
-                120,
-            ));
-
-            if let Err(e) = group.add_member(conn, remote_addr) {
-                tracing::warn!("Failed to add member: {}", e);
-            } else if let Err(e) = group.update_member_status(id, MemberStatus::Active) {
-                tracing::warn!("Failed to set member active: {}", e);
+        // Get member ID for this remote address - reject if not handshaked
+        let member_id = match addr_to_member.get(&remote_addr) {
+            Some(id) => *id,
+            None => {
+                tracing::warn!(
+                    "Received data from {} without handshake, ignoring packet",
+                    remote_addr
+                );
+                continue;
             }
-
-            id
-        });
+        };
 
         // Deserialize and process packet
         let packet = match DataPacket::from_bytes(&buffer[..n]) {
