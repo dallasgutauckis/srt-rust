@@ -99,7 +99,11 @@ impl BroadcastReceiver {
 
         if seq.distance_to(next_expected) > 0 {
             // Packet is before next_expected, already delivered
-            tracing::debug!("Packet {} is before next_expected {}, rejecting", seq.as_raw(), next_expected.as_raw());
+            tracing::debug!(
+                "Packet {} is before next_expected {}, rejecting",
+                seq.as_raw(),
+                next_expected.as_raw()
+            );
             return Err(BroadcastError::DuplicatePacket);
         }
 
@@ -114,7 +118,12 @@ impl BroadcastReceiver {
         // Check buffer size
         if received.len() >= self.max_buffer_size {
             // Buffer full, drop this packet
-            tracing::warn!("Buffer full ({}/{}), dropping packet {}", received.len(), self.max_buffer_size, seq.as_raw());
+            tracing::warn!(
+                "Buffer full ({}/{}), dropping packet {}",
+                received.len(),
+                self.max_buffer_size,
+                seq.as_raw()
+            );
             return Ok(false);
         }
 
@@ -142,14 +151,21 @@ impl BroadcastReceiver {
 
         let mut delivered_count = 0;
         while let Some(info) = received.remove(&*next_expected) {
-            tracing::debug!("Delivering packet {} to ready queue", next_expected.as_raw());
+            tracing::debug!(
+                "Delivering packet {} to ready queue",
+                next_expected.as_raw()
+            );
             ready_queue.push_back(info.packet);
             *next_expected = next_expected.next();
             delivered_count += 1;
         }
 
         if delivered_count > 0 {
-            tracing::debug!("Delivered {} packets to ready queue, next_expected now {}", delivered_count, next_expected.as_raw());
+            tracing::debug!(
+                "Delivered {} packets to ready queue, next_expected now {}",
+                delivered_count,
+                next_expected.as_raw()
+            );
         }
     }
 

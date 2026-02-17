@@ -271,7 +271,11 @@ fn main() -> anyhow::Result<()> {
                 }
             }
             if popped_count > 0 {
-                tracing::debug!("Wrote {} packets, total_bytes={}", popped_count, total_bytes);
+                tracing::debug!(
+                    "Wrote {} packets, total_bytes={}",
+                    popped_count,
+                    total_bytes
+                );
                 // Flush after writing packets to ensure data is written immediately
                 let _ = writer.flush();
             }
