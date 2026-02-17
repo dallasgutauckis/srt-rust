@@ -25,13 +25,7 @@ fn test_addr(port: u16) -> SocketAddr {
 /// Helper to add a member to a group (performs proper handshake)
 fn add_test_member(group: &SocketGroup, id: u32, addr: SocketAddr) -> Result<u32, GroupError> {
     let local_addr = "127.0.0.1:8000".parse().unwrap();
-    let mut conn = Connection::new(
-        id,
-        local_addr,
-        addr,
-        SeqNumber::new(1000),
-        120,
-    );
+    let mut conn = Connection::new(id, local_addr, addr, SeqNumber::new(1000), 120);
 
     // Perform handshake: create handshake request and simulate response
     let handshake = conn.create_handshake();
