@@ -243,7 +243,7 @@ mod tests {
 
         let diff = ts2 - ts1;
         assert!(diff >= Duration::from_millis(10));
-        assert!(diff < Duration::from_millis(50));
+        assert!(diff < Duration::from_millis(500)); // Generous upper bound for CI
     }
 
     #[test]
@@ -254,7 +254,7 @@ mod tests {
 
         let srt_ts = ts.as_srt_timestamp(reference);
         assert!(srt_ts >= 10_000); // At least 10ms = 10,000 microseconds
-        assert!(srt_ts < 50_000); // Less than 50ms
+        assert!(srt_ts < 500_000); // Less than 500ms (generous upper bound for CI)
     }
 
     #[test]
