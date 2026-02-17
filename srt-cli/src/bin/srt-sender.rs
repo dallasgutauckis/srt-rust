@@ -226,16 +226,9 @@ fn main() -> anyhow::Result<()> {
         }
 
         if !handshake_done {
-            tracing::warn!(
-                "Handshake with {} timed out, continuing anyway...",
+            anyhow::bail!(
+                "Handshake with {} timed out after 5 seconds. Cannot establish connection without handshake.",
                 remote_addr
-            );
-            conn = Connection::new_connected(
-                member_id,
-                actual_local,
-                remote_addr,
-                SeqNumber::new(0),
-                120,
             );
         }
 

@@ -18,17 +18,24 @@ fn test_addr(port: u16) -> SocketAddr {
     format!("127.0.0.1:{}", port).parse().unwrap()
 }
 
-/// Helper to add a member to a group (creates connected connections for testing)
+/// Helper to add a member to a group (performs proper handshake)
 fn add_test_member(group: &SocketGroup, id: u32, addr: SocketAddr) -> Result<u32, GroupError> {
     let local_addr = "127.0.0.1:8000".parse().unwrap();
-    let conn = Arc::new(Connection::new_connected(
+    let mut conn = Connection::new(
         id,
         local_addr,
         addr,
         SeqNumber::new(1000),
         120,
-    ));
-    let member_id = group.add_member(conn, addr)?;
+    );
+
+    // Perform handshake: create handshake request and simulate response
+    let handshake = conn.create_handshake();
+
+    // Simulate receiving the handshake response
+    conn.process_handshake(handshake).unwrap();
+
+    let member_id = group.add_member(Arc::new(conn), addr)?;
     // Set member to Active status so it can send/receive
     group.update_member_status(member_id, MemberStatus::Active)?;
     Ok(member_id)

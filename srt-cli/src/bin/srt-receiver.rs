@@ -231,22 +231,17 @@ fn main() -> anyhow::Result<()> {
             }
         }
 
-        // Get or create member ID for this remote address
-        let member_id = *addr_to_member.entry(remote_addr).or_insert_with(|| {
-            let id = next_member_id;
-            next_member_id += 1;
-            tracing::info!("New path detected (data): {} (member {})", remote_addr, id);
-            let conn = Arc::new(Connection::new_connected(
-                id,
-                socket.local_addr().unwrap(),
-                remote_addr,
-                SeqNumber::new(0),
-                120,
-            ));
-            let _ = group.add_member(conn, remote_addr);
-            let _ = group.update_member_status(id, MemberStatus::Active);
-            id
-        });
+        // Get member ID for this remote address - reject if not handshaked
+        let member_id = match addr_to_member.get(&remote_addr) {
+            Some(id) => *id,
+            None => {
+                tracing::warn!(
+                    "Received data from {} without handshake, ignoring packet",
+                    remote_addr
+                );
+                continue;
+            }
+        };
 
         // Deserialize Data packet
         if let Ok(packet) = DataPacket::from_bytes(&buffer[..n]) {
@@ -264,9 +259,21 @@ fn main() -> anyhow::Result<()> {
             }
             packet_count += 1;
 
+            let mut popped_count = 0;
             while let Some(ready_packet) = bonding.receiver.pop_ready_packet() {
-                let _ = writer.write_all(&ready_packet.payload);
-                total_bytes += ready_packet.payload.len() as u64;
+                tracing::debug!("Popped ready packet, size={}", ready_packet.payload.len());
+                match writer.write_all(&ready_packet.payload) {
+                    Ok(_) => {
+                        total_bytes += ready_packet.payload.len() as u64;
+                        popped_count += 1;
+                    }
+                    Err(e) => tracing::error!("Error writing packet: {}", e),
+                }
+            }
+            if popped_count > 0 {
+                tracing::debug!("Wrote {} packets, total_bytes={}", popped_count, total_bytes);
+                // Flush after writing packets to ensure data is written immediately
+                let _ = writer.flush();
             }
 
             if packet_count % 100 == 0 {
